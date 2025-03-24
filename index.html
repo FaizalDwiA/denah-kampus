@@ -43,7 +43,7 @@
 
 <body>
   <canvas id="gameCanvas"></canvas>
-  <div id="actionText">Jelajahi rumahmu!</div>
+  <div id="actionText">Jelajahi Kampusmu!</div>
 
   <script>
     const canvas = document.getElementById("gameCanvas");
@@ -64,11 +64,16 @@
       "Ruang Informasi": { width: 3, height: 5, color: "blue" },
       "Front Office": { width: 6.5, height: 5, color: "gray" },
       "Pintu Atas": { width: 2, height: 2.5, color: "red" },
+      "Ruang Prodi TRPL": { width: 5, height: 5, color: "gray" },
+      "Ruang Wadir 3": { width: 5, height: 5, color: "gray" },
 
       // Bawah
       "Ruang Humas": { width: 3, height: 5, color: "green" },
       "Ruang Wadir 1 & 2": { width: 3, height: 5, color: "green" },
       "Ruang Digital Marketing": { width: 3, height: 5, color: "green" },
+      "Pintu Bawah": { width: 1, height: 2.5, color: "red" },
+      "Ruang Direktur": { width: 5, height: 5, color: "gray" },
+      "Ruang UPM": { width: 5, height: 5, color: "gray" },
     };
 
     const rooms = [
@@ -76,11 +81,16 @@
       { name: "Ruang Informasi", x: 1, y: 1 },
       { name: "Front Office", x: 4.5, y: 1 },
       { name: "Pintu Atas", x: 11, y: 1 },
+      { name: "Ruang Prodi TRPL", x: 13, y: 1 },
+      { name: "Ruang Wadir 3", x: 18.5, y: 1 },
 
       // Bawah
       { name: "Ruang Humas", x: 1, y: 9 },
       { name: "Ruang Wadir 1 & 2", x: 4.5, y: 9 },
       { name: "Ruang Digital Marketing", x: 8, y: 9 },
+      { name: "Pintu Bawah", x: 11.5, y: 11.5 },
+      { name: "Ruang Direktur", x: 13, y: 9 },
+      { name: "Ruang UPM", x: 18.5, y: 9 },
     ];
 
     const player = {
