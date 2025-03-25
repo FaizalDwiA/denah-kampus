@@ -8,13 +8,17 @@
   <style>
     body {
       margin: 0;
-      overflow: hidden;
+      overflow-x: hidden;
+      /* Menambahkan scroll horizontal */
+      overflow-y: hidden;
       background-color: #282c34;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       height: 100vh;
+      width: max-content;
+      /* Memungkinkan body lebih lebar */
     }
 
     canvas {
@@ -43,7 +47,7 @@
 
 <body>
   <canvas id="gameCanvas"></canvas>
-  <div id="actionText">Jelajahi rumahmu!</div>
+  <div id="actionText">Jelajahi Kampusmu!</div>
 
   <script>
     const canvas = document.getElementById("gameCanvas");
@@ -51,9 +55,10 @@
     const actionText = document.getElementById("actionText");
 
     function resizeCanvas() {
-      canvas.width = window.innerWidth * 0.9;
+      canvas.width = Math.max(window.innerWidth * 1, 1200); // Bisa lebih besar dari layar
       canvas.height = window.innerHeight * 0.75;
     }
+
     window.addEventListener("resize", resizeCanvas);
     resizeCanvas();
 
@@ -64,11 +69,16 @@
       "Ruang Informasi": { width: 3, height: 5, color: "blue" },
       "Front Office": { width: 6.5, height: 5, color: "gray" },
       "Pintu Atas": { width: 2, height: 2.5, color: "red" },
+      "Ruang Prodi TRPL": { width: 5, height: 5, color: "gray" },
+      "Ruang Wadir 3": { width: 5, height: 5, color: "gray" },
 
       // Bawah
       "Ruang Humas": { width: 3, height: 5, color: "green" },
       "Ruang Wadir 1 & 2": { width: 3, height: 5, color: "green" },
       "Ruang Digital Marketing": { width: 3, height: 5, color: "green" },
+      "Pintu Bawah": { width: 1, height: 2.5, color: "red" },
+      "Ruang Direktur": { width: 5, height: 5, color: "gray" },
+      "Ruang UPM": { width: 5, height: 5, color: "gray" },
     };
 
     const rooms = [
@@ -76,11 +86,16 @@
       { name: "Ruang Informasi", x: 1, y: 1 },
       { name: "Front Office", x: 4.5, y: 1 },
       { name: "Pintu Atas", x: 11, y: 1 },
+      { name: "Ruang Prodi TRPL", x: 13, y: 1 },
+      { name: "Ruang Wadir 3", x: 18.5, y: 1 },
 
       // Bawah
       { name: "Ruang Humas", x: 1, y: 9 },
       { name: "Ruang Wadir 1 & 2", x: 4.5, y: 9 },
       { name: "Ruang Digital Marketing", x: 8, y: 9 },
+      { name: "Pintu Bawah", x: 11.5, y: 11.5 },
+      { name: "Ruang Direktur", x: 13, y: 9 },
+      { name: "Ruang UPM", x: 18.5, y: 9 },
     ];
 
     const player = {
@@ -88,7 +103,7 @@
       y: tileSize * 3,
       width: tileSize * 0.6,
       height: tileSize * 0.6,
-      speed: tileSize * 0.2,
+      speed: tileSize * 1,
       image: new Image()
     };
     player.image.src = "https://i.imgur.com/OqLyoaB.png";
@@ -112,7 +127,7 @@
     }
 
     function checkActionZone() {
-      actionText.textContent = "Jelajahi rumahmu!";
+      actionText.textContent = "Jelajahi Kampusmu!";
       rooms.forEach(room => {
         let size = roomSizes[room.name];
         if (
@@ -129,6 +144,25 @@
       player.y = Math.max(0, Math.min(player.y, canvas.height - player.height));
     }
 
+    function autoScroll() {
+      const margin = 1000; // Jarak batas sebelum scroll
+      const scrollSpeed = 200; // Seberapa cepat scroll
+
+      // Dapatkan posisi pemain relatif terhadap layar
+      const playerRight = player.x + player.width;
+      const playerLeft = player.x;
+
+      // Jika pemain mendekati sisi kanan layar, geser ke kanan
+      if (playerRight > window.innerWidth - margin) {
+        window.scrollBy({ left: scrollSpeed, behavior: "smooth" });
+      }
+
+      // Jika pemain mendekati sisi kiri layar, geser ke kiri
+      if (playerLeft < margin) {
+        window.scrollBy({ left: -scrollSpeed, behavior: "smooth" });
+      }
+    }
+
     window.addEventListener("keydown", (e) => {
       if (e.key === "ArrowUp") player.y -= player.speed;
       if (e.key === "ArrowDown") player.y += player.speed;
@@ -136,6 +170,7 @@
       if (e.key === "ArrowRight") player.x += player.speed;
       enforceBoundaries();
       checkActionZone();
+      autoScroll(); // Tambahkan scroll otomatis
     });
 
     let dragging = false;
@@ -147,7 +182,19 @@
         player.y = e.offsetY - player.height / 2;
         enforceBoundaries();
         checkActionZone();
+        autoScroll(); // Tambahkan scroll otomatis
       }
+    });
+
+    let startX, scrollLeft;
+    document.body.addEventListener("touchstart", (e) => {
+      startX = e.touches[0].pageX - document.body.scrollLeft;
+      scrollLeft = document.body.scrollLeft;
+    });
+
+    document.body.addEventListener("touchmove", (e) => {
+      const x = e.touches[0].pageX - startX;
+      document.body.scrollLeft = scrollLeft - x;
     });
 
     function gameLoop() {

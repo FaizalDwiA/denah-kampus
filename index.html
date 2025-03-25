@@ -6,20 +6,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mini Minecraft - Denah & Aksi</title>
   <style>
-    body {
+    * {
       margin: 0;
-      overflow: hidden;
-      background-color: #282c34;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      background-color: #282c34;
+      overflow: hidden;
       height: 100vh;
     }
 
     canvas {
-      display: block;
       border: 2px solid #000;
+      display: block;
       background-color: #87CEEB;
       max-width: 100%;
       height: auto;
@@ -38,6 +43,36 @@
       font-family: Arial, sans-serif;
       text-align: center;
     }
+
+
+
+    .controls {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .controls div {
+      display: flex;
+      gap: 10px;
+    }
+
+    .control-btn {
+      width: 50px;
+      height: 50px;
+      background: rgba(255, 255, 255, 0.7);
+      border: none;
+      font-size: 20px;
+      font-weight: bold;
+      border-radius: 10px;
+      cursor: pointer;
+      text-align: center;
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 
@@ -45,15 +80,27 @@
   <canvas id="gameCanvas"></canvas>
   <div id="actionText">Jelajahi Kampusmu!</div>
 
+
+  <!-- Tombol Navigasi -->
+  <div class="controls">
+    <button class="control-btn" id="up">⬆️</button>
+    <div>
+      <button class="control-btn" id="left">⬅️</button>
+      <button class="control-btn" id="down">⬇️</button>
+      <button class="control-btn" id="right">➡️</button>
+    </div>
+  </div>
+
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
     const actionText = document.getElementById("actionText");
 
     function resizeCanvas() {
-      canvas.width = window.innerWidth * 0.9;
+      canvas.width = Math.max(window.innerWidth, 800); // Bisa lebih besar dari layar
       canvas.height = window.innerHeight * 0.75;
     }
+
     window.addEventListener("resize", resizeCanvas);
     resizeCanvas();
 
@@ -94,11 +141,7 @@
     ];
 
     const player = {
-      x: tileSize * 3,
-      y: tileSize * 3,
-      width: tileSize * 0.6,
-      height: tileSize * 0.6,
-      speed: tileSize * 0.2,
+      x: 100, y: 100, width: 30, height: 30, speed: 20,
       image: new Image()
     };
     player.image.src = "https://i.imgur.com/OqLyoaB.png";
@@ -122,7 +165,7 @@
     }
 
     function checkActionZone() {
-      actionText.textContent = "Jelajahi rumahmu!";
+      actionText.textContent = "Jelajahi Kampusmu!";
       rooms.forEach(room => {
         let size = roomSizes[room.name];
         if (
@@ -139,6 +182,25 @@
       player.y = Math.max(0, Math.min(player.y, canvas.height - player.height));
     }
 
+    function autoScroll() {
+      const margin = 1000; // Jarak batas sebelum scroll
+      const scrollSpeed = 200; // Seberapa cepat scroll
+
+      // Dapatkan posisi pemain relatif terhadap layar
+      const playerRight = player.x + player.width;
+      const playerLeft = player.x;
+
+      // Jika pemain mendekati sisi kanan layar, geser ke kanan
+      if (playerRight > window.innerWidth - margin) {
+        window.scrollBy({ left: scrollSpeed, behavior: "smooth" });
+      }
+
+      // Jika pemain mendekati sisi kiri layar, geser ke kiri
+      if (playerLeft < margin) {
+        window.scrollBy({ left: -scrollSpeed, behavior: "smooth" });
+      }
+    }
+
     window.addEventListener("keydown", (e) => {
       if (e.key === "ArrowUp") player.y -= player.speed;
       if (e.key === "ArrowDown") player.y += player.speed;
@@ -146,6 +208,7 @@
       if (e.key === "ArrowRight") player.x += player.speed;
       enforceBoundaries();
       checkActionZone();
+      autoScroll(); // Tambahkan scroll otomatis
     });
 
     let dragging = false;
@@ -157,8 +220,50 @@
         player.y = e.offsetY - player.height / 2;
         enforceBoundaries();
         checkActionZone();
+        autoScroll(); // Tambahkan scroll otomatis
       }
     });
+
+    let startX, scrollLeft;
+    document.body.addEventListener("touchstart", (e) => {
+      startX = e.touches[0].pageX - document.body.scrollLeft;
+      scrollLeft = document.body.scrollLeft;
+    });
+
+    document.body.addEventListener("touchmove", (e) => {
+      const x = e.touches[0].pageX - startX;
+      document.body.scrollLeft = scrollLeft - x;
+    });
+
+
+    window.addEventListener("keydown", (e) => movePlayer(e.key));
+
+    function movePlayer(direction) {
+      if (direction === "ArrowUp" || direction === "w") player.y -= player.speed;
+      if (direction === "ArrowDown" || direction === "s") player.y += player.speed;
+      if (direction === "ArrowLeft" || direction === "a") player.x -= player.speed;
+      if (direction === "ArrowRight" || direction === "d") player.x += player.speed;
+      enforceBoundaries();
+    }
+
+    let interval;
+    function startMoving(direction) {
+      movePlayer(direction);
+      interval = setInterval(() => movePlayer(direction), 100);
+    }
+    function stopMoving() {
+      clearInterval(interval);
+    }
+
+    // Tombol Mobile dengan tahan
+    document.getElementById("up").addEventListener("touchstart", () => startMoving("ArrowUp"));
+    document.getElementById("up").addEventListener("touchend", stopMoving);
+    document.getElementById("down").addEventListener("touchstart", () => startMoving("ArrowDown"));
+    document.getElementById("down").addEventListener("touchend", stopMoving);
+    document.getElementById("left").addEventListener("touchstart", () => startMoving("ArrowLeft"));
+    document.getElementById("left").addEventListener("touchend", stopMoving);
+    document.getElementById("right").addEventListener("touchstart", () => startMoving("ArrowRight"));
+    document.getElementById("right").addEventListener("touchend", stopMoving);
 
     function gameLoop() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
